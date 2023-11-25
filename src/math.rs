@@ -1,4 +1,4 @@
-use std::ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Sub};
+use std::ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Sub};
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct VectorD<const D: usize> {
@@ -129,6 +129,16 @@ impl<const D: usize> Div<f32> for &VectorD<D> {
     }
 }
 
+impl<const D: usize> Div<f32> for VectorD<D> {
+    type Output = VectorD<D>;
+
+    fn div(self, rhs: f32) -> Self::Output {
+        let mut result = self.e;
+        result.iter_mut().for_each(|x| *x /= rhs);
+        Self::Output { e: result }
+    }
+}
+
 impl<const D: usize> Mul<f32> for VectorD<D> {
     type Output = VectorD<D>;
 
@@ -146,6 +156,16 @@ impl<const D: usize> Mul<VectorD<D>> for f32 {
         let mut result = rhs.e;
         result.iter_mut().for_each(|x| *x *= self);
         Self::Output { e: result }
+    }
+}
+
+impl<const D: usize> Neg for VectorD<D> {
+    type Output = Self;
+
+    fn neg(self) -> Self::Output {
+        let mut result = self.e;
+        result.iter_mut().for_each(|x| *x = -*x);
+        Self { e: result }
     }
 }
 
@@ -187,6 +207,7 @@ impl VectorD<3> {
     }
 }
 
+pub type Vector3 = VectorD<3>;
 pub type Point3 = VectorD<3>;
 
 #[cfg(test)]
