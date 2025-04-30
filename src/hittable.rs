@@ -1,4 +1,4 @@
-use std::{ops::RangeInclusive, rc::Rc};
+use std::ops::RangeInclusive;
 
 use crate::{
     math::{Point3, Vector3},
@@ -18,16 +18,16 @@ pub struct HitRecord {
 }
 
 impl HitRecord {
-    pub fn new(p: Point3, normal: Vector3, t: f32) -> Self {
-        // We assume normal is unit length - is this a good design? probably not
+    pub fn new(ray: &Ray, outward_normal: Vector3, t: f32) -> Self {
+        let p = ray.at(t);
 
-        let facing = match p.dot(&normal) < 0. {
+        let facing = match ray.direction().dot(&outward_normal) < 0. {
             true => Facing::Front,
             false => Facing::Back,
         };
         let normal = match facing {
-            Facing::Back => -normal,
-            Facing::Front => normal,
+            Facing::Front => outward_normal,
+            Facing::Back => -outward_normal,
         };
 
         Self {
@@ -40,38 +40,37 @@ impl HitRecord {
 }
 
 pub trait Hittable {
-    fn hit(&self, ray: &Ray, valid_interval: &RangeInclusive<f32>) -> Option<HitRecord>;
+    fn hit(&self, ray: &Ray, acceptable_range: &RangeInclusive<f32>) -> Option<HitRecord>;
 }
 
-#[derive(Default)]
 pub struct HittableList {
-    inner: Vec<Rc<dyn Hittable>>,
+    hittables: Vec<Box<dyn Hittable>>,
 }
 
 impl HittableList {
     pub fn new() -> Self {
-        Default::default()
+        Self {
+            hittables: Vec::new(),
+        }
     }
 
-    pub fn add(&mut self, hittable: Rc<dyn Hittable>) {
-        self.inner.push(hittable);
+    pub fn add(&mut self, hittable: Box<dyn Hittable>) {
+        self.hittables.push(hittable);
     }
-}
 
-impl Hittable for HittableList {
-    fn hit(&self, ray: &Ray, valid_interval: &RangeInclusive<f32>) -> Option<HitRecord> {
-        let mut valid_interval = valid_interval.clone();
-        let mut result = None;
+    pub fn hit(&self, ray: &Ray, acceptable_range: &RangeInclusive<f32>) -> Option<HitRecord> {
+        let mut closest_so_far = *acceptable_range.end();
+        let mut closest_hit = None;
 
-        for object in self.inner.iter() {
-            let Some(hit_record) = object.hit(ray, &valid_interval) else {
-                continue;
-            };
-
-            valid_interval = *valid_interval.start()..=hit_record.t;
-            result.replace(hit_record);
+        for hittable in &self.hittables {
+            if let Some(hit) = hittable.hit(ray, acceptable_range) {
+                if hit.t < closest_so_far {
+                    closest_so_far = hit.t;
+                    closest_hit = Some(hit);
+                }
+            }
         }
 
-        result
+        closest_hit
     }
 }

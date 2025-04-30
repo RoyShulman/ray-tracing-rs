@@ -210,6 +210,9 @@ impl VectorD<3> {
 pub type Vector3 = VectorD<3>;
 pub type Point3 = VectorD<3>;
 
+// Copying 3 f32 is cheap enough
+impl Copy for Vector3 {}
+
 #[cfg(test)]
 mod tests {
     use super::*;
