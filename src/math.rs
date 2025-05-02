@@ -21,6 +21,12 @@ impl<const D: usize> VectorD<D> {
     pub fn dot(&self, other: &Self) -> f32 {
         dot(self, other)
     }
+
+    pub fn clamp(&mut self, min: f32, max: f32) {
+        self.e.iter_mut().for_each(|x| {
+            *x = x.clamp(min, max);
+        });
+    }
 }
 
 fn dot<const D: usize>(u: &VectorD<D>, v: &VectorD<D>) -> f32 {

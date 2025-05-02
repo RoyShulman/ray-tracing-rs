@@ -16,6 +16,7 @@ pub struct Camera {
     image_height: u16,
     image_width: u16,
     samples_per_pixel: u8,
+    pixel_samples_scale: f32,
     center: Point3,
     pixel00_loc: Point3,
     pixel_delta_u: Vector3,
@@ -53,6 +54,7 @@ impl Camera {
             pixel_delta_u,
             pixel_delta_v,
             samples_per_pixel,
+            pixel_samples_scale: 1. / samples_per_pixel as f32,
         }
     }
 
@@ -64,13 +66,19 @@ impl Camera {
         for height in 0..self.image_height {
             eprintln!("Scanlines remaining: {}", (self.image_height - height));
             for width in 0..self.image_width {
-                // for _ in 0..self.samples_per_pixel {
-                let ray = self.get_ray(width, height);
-                // pixel_color += ray_color(&ray, world);
-                // }
+                let mut pixel_color = Point3::default();
+                for _ in 0..self.samples_per_pixel {
+                    let ray = self.get_ray(width, height);
+                    pixel_color += ray_color(&ray, world).inner();
+                }
+                // now we need to scale the color by the number of samples
+                let pixel_color = Color::new(
+                    pixel_color.x() * self.pixel_samples_scale,
+                    pixel_color.y() * self.pixel_samples_scale,
+                    pixel_color.z() * self.pixel_samples_scale,
+                );
 
-                let pixel_color = ray_color(&ray, world);
-                println!("{}", pixel_color.write_ppm(self.samples_per_pixel))
+                println!("{}", pixel_color.write_ppm())
             }
         }
 
@@ -78,19 +86,16 @@ impl Camera {
     }
 
     fn get_ray(&self, width: u16, height: u16) -> Ray {
+        // get a random point in the [-0.5, -0.5]-[0.5, 0.5] square
+        let offset_x = rand::random_range(-0.5..=0.5);
+        let offset_y = rand::random_range(-0.5..=0.5);
+
         let pixel_center = self.pixel00_loc
-            + (width as f32 * self.pixel_delta_u)
-            + (height as f32 * self.pixel_delta_v);
+            + ((width as f32 + offset_x) * self.pixel_delta_u)
+            + ((height as f32 + offset_y) * self.pixel_delta_v);
 
         let direction = pixel_center - self.center;
         Ray::new(self.center, direction)
-    }
-
-    fn pixel_sample_square(&self) -> Vector3 {
-        let mut rng = rand::thread_rng();
-        let px = -0.5 + rng.gen::<f32>();
-        let py = -0.5 + rng.gen::<f32>();
-        (px * self.pixel_delta_u) + (py * self.pixel_delta_v)
     }
 }
 
@@ -103,5 +108,6 @@ fn ray_color(ray: &Ray, world: &HittableList) -> Color {
 
     let unit_direction = ray.direction().unit_vector();
     let a = 0.5 * (unit_direction.y() + 1.);
-    (1. - a) * Color::new(1., 1., 1.) + a * Color::new(0.5, 0.7, 1.)
+    let color = (1. - a) * Point3::new(1., 1., 1.) + a * Point3::new(0.5, 0.7, 1.);
+    Color::new(color.x(), color.y(), color.z())
 }

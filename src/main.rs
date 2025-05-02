@@ -12,7 +12,7 @@ mod sphere;
 
 const IMAGE_WIDTH: u16 = 400;
 const ASPECT_RATIO: f32 = 16. / 9.;
-const SAMPLES_PER_PIXEL: u8 = 10;
+const SAMPLES_PER_PIXEL: u8 = 100;
 
 fn main() {
     let mut world = HittableList::new();

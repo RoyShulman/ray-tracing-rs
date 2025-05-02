@@ -1,4 +1,4 @@
-use std::ops::{Add, Mul};
+use std::ops::{Add, AddAssign, Mul};
 
 use crate::math::Point3;
 
@@ -9,12 +9,6 @@ use crate::math::Point3;
 #[derive(Debug, Default)]
 pub struct Color(Point3);
 
-// impl Default for Color {
-//     fn default() -> Self {
-//         Self(Default::default())
-//     }
-// }
-
 impl Color {
     pub fn new(r: f32, g: f32, b: f32) -> Self {
         debug_assert!((0. ..=1.).contains(&r), "r must be between 0 and 1");
@@ -23,7 +17,7 @@ impl Color {
         Self(Point3::new(r, g, b))
     }
 
-    pub fn write_ppm(&self, samples_per_pixel: u8) -> String {
+    pub fn write_ppm(&self) -> String {
         let r = self.0.x();
         let g = self.0.y();
         let b = self.0.z();
@@ -34,28 +28,8 @@ impl Color {
 
         format!("{} {} {}\n", rbyte, gbyte, bbyte)
     }
-}
 
-impl Mul<f32> for Color {
-    type Output = Color;
-
-    fn mul(self, rhs: f32) -> Self::Output {
-        Color(self.0 * rhs)
-    }
-}
-
-impl Mul<Color> for f32 {
-    type Output = Color;
-
-    fn mul(self, rhs: Color) -> Self::Output {
-        Color(rhs.0 * self)
-    }
-}
-
-impl Add<Color> for Color {
-    type Output = Self;
-
-    fn add(self, rhs: Color) -> Self::Output {
-        Color(self.0 + rhs.0)
+    pub fn inner(self) -> Point3 {
+        self.0
     }
 }
