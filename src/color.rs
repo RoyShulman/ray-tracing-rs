@@ -1,5 +1,13 @@
 use crate::math::Point3;
 
+fn linear_to_gamma(linear_value: f32) -> f32 {
+    if linear_value > 0. {
+        return linear_value.sqrt();
+    }
+
+    0.
+}
+
 /// Color is a specific point3
 ///
 /// Useful because we can have specific functions like default
@@ -19,6 +27,10 @@ impl Color {
         let r = self.0.x();
         let g = self.0.y();
         let b = self.0.z();
+
+        let r = linear_to_gamma(r);
+        let g = linear_to_gamma(g);
+        let b = linear_to_gamma(b);
 
         let rbyte = (255.99 * r) as u8;
         let gbyte = (255.99 * g) as u8;

@@ -105,7 +105,7 @@ fn ray_color(ray: &Ray, world: &HittableList, depth: usize) -> Color {
     }
 
     if let Some(t) = world.hit(ray, &(0.001..=f32::INFINITY)) {
-        let direction = Vector3::random_in_hemisphere(&t.normal);
+        let direction = t.normal + Vector3::random_in_hemisphere(&t.normal);
         // bounce the ray by creating a new one from the hit point in the direction
         let new_ray = Ray::new(t.p, direction);
         // on each bounce, reduce the color by half
