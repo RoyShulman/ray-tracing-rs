@@ -27,6 +27,10 @@ impl<const D: usize> VectorD<D> {
             *x = x.clamp(min, max);
         });
     }
+
+    pub fn near_zero(&self) -> bool {
+        self.e.iter().all(|x| x.abs() < 1e-8)
+    }
 }
 
 fn dot<const D: usize>(u: &VectorD<D>, v: &VectorD<D>) -> f32 {
@@ -195,6 +199,19 @@ impl<const D: usize> Mul<f32> for &VectorD<D> {
     }
 }
 
+impl<const D: usize> Mul<VectorD<D>> for VectorD<D> {
+    type Output = VectorD<D>;
+
+    fn mul(self, rhs: VectorD<D>) -> Self::Output {
+        let mut result = self.e;
+        result
+            .iter_mut()
+            .zip(rhs.e.iter())
+            .for_each(|(result, rhs)| *result *= *rhs);
+        Self::Output { e: result }
+    }
+}
+
 impl VectorD<3> {
     pub const fn new(x: f32, y: f32, z: f32) -> Self {
         Self { e: [x, y, z] }
@@ -217,15 +234,6 @@ impl VectorD<3> {
             if length_squared <= 1. && length_squared > 1e-50 {
                 return p.unit_vector();
             }
-        }
-    }
-    
-    pub fn random_in_hemisphere(normal: &Self) -> Self {
-        let in_unit_sphere = Self::random_unit();
-        if in_unit_sphere.dot(normal) > 0. {
-            in_unit_sphere
-        } else {
-            -in_unit_sphere
         }
     }
 

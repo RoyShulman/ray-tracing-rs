@@ -1,6 +1,7 @@
-use std::ops::RangeInclusive;
+use std::{ops::RangeInclusive, rc::Rc};
 
 use crate::{
+    material::Material,
     math::{Point3, Vector3},
     ray::Ray,
 };
@@ -14,11 +15,11 @@ pub struct HitRecord {
     pub p: Point3,
     pub normal: Vector3,
     pub t: f32,
-    facing: Facing,
+    pub mat: Rc<dyn Material>,
 }
 
 impl HitRecord {
-    pub fn new(ray: &Ray, outward_normal: Vector3, t: f32) -> Self {
+    pub fn new(ray: &Ray, outward_normal: Vector3, t: f32, mat: Rc<dyn Material>) -> Self {
         let p = ray.at(t);
 
         let facing = match ray.direction().dot(&outward_normal) < 0. {
@@ -30,12 +31,7 @@ impl HitRecord {
             Facing::Back => -outward_normal,
         };
 
-        Self {
-            p,
-            normal,
-            t,
-            facing,
-        }
+        Self { p, normal, t, mat }
     }
 }
 

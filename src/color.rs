@@ -1,3 +1,5 @@
+use std::ops::Mul;
+
 use crate::math::Point3;
 
 fn linear_to_gamma(linear_value: f32) -> f32 {
@@ -10,9 +12,9 @@ fn linear_to_gamma(linear_value: f32) -> f32 {
 
 /// Color is a specific point3
 ///
-/// Useful because we can have specific functions like default
-/// or avoid multiplying a color by a color which makes no sense
-#[derive(Debug, Default)]
+/// Useful because we can have specific functions like drawing a color.
+/// Also, we keep the color in the range of 0. to 1.0
+#[derive(Debug, Default, Clone, Copy)]
 pub struct Color(Point3);
 
 impl Color {
@@ -41,5 +43,14 @@ impl Color {
 
     pub fn inner(self) -> Point3 {
         self.0
+    }
+}
+
+impl Mul<Color> for Color {
+    type Output = Color;
+
+    fn mul(self, rhs: Color) -> Self::Output {
+        // both are colors and have values in the range [0,1] so we keep the invariance
+        Color(self.0 * rhs.0)
     }
 }

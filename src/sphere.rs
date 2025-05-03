@@ -1,7 +1,8 @@
-use std::ops::RangeInclusive;
+use std::{ops::RangeInclusive, rc::Rc};
 
 use crate::{
     hittable::{HitRecord, Hittable},
+    material::Material,
     math::Point3,
     ray::Ray,
 };
@@ -9,11 +10,16 @@ use crate::{
 pub struct Sphere {
     center: Point3,
     radius: f32,
+    mat: Rc<dyn Material>,
 }
 
 impl Sphere {
-    pub fn new(center: Point3, radius: f32) -> Self {
-        Self { center, radius }
+    pub fn new(center: Point3, radius: f32, mat: Rc<dyn Material>) -> Self {
+        Self {
+            center,
+            radius,
+            mat,
+        }
     }
 }
 impl Hittable for Sphere {
@@ -36,6 +42,7 @@ impl Hittable for Sphere {
             ray,
             (ray.at(root) - self.center) / self.radius,
             root,
+            self.mat.clone(),
         ))
     }
 }

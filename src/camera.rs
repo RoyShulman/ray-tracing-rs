@@ -97,22 +97,18 @@ impl Camera {
     }
 }
 
-const MAX_DEPTH: usize = 10;
+const MAX_DEPTH: usize = 50;
 
 fn ray_color(ray: &Ray, world: &HittableList, depth: usize) -> Color {
     if depth > MAX_DEPTH {
         return Color::default();
     }
 
-    if let Some(t) = world.hit(ray, &(0.001..=f32::INFINITY)) {
-        let direction = t.normal + Vector3::random_in_hemisphere(&t.normal);
-        // bounce the ray by creating a new one from the hit point in the direction
-        let new_ray = Ray::new(t.p, direction);
-        // on each bounce, reduce the color by half
-        let color = ray_color(&new_ray, world, depth + 1);
-        let half_color = color.inner() * 0.5;
-        // we know the color is in the range [0, 1]
-        return Color::new(half_color.x(), half_color.y(), half_color.z());
+    if let Some(rec) = world.hit(ray, &(0.001..=f32::INFINITY)) {
+        if let Some(scattered) = rec.mat.scatter(ray, &rec) {
+            return scattered.attenuation * ray_color(&scattered.ray, world, depth + 1);
+        }
+        return Color::default();
     }
 
     let unit_direction = ray.direction().unit_vector();
