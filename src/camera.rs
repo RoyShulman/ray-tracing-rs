@@ -1,5 +1,3 @@
-use rand::Rng;
-
 use crate::{
     color::Color,
     hittable::HittableList,
@@ -69,7 +67,7 @@ impl Camera {
                 let mut pixel_color = Point3::default();
                 for _ in 0..self.samples_per_pixel {
                     let ray = self.get_ray(width, height);
-                    pixel_color += ray_color(&ray, world).inner();
+                    pixel_color += ray_color(&ray, world, 0).inner();
                 }
                 // now we need to scale the color by the number of samples
                 let pixel_color = Color::new(
@@ -99,11 +97,22 @@ impl Camera {
     }
 }
 
-fn ray_color(ray: &Ray, world: &HittableList) -> Color {
-    if let Some(t) = world.hit(ray, &(0.0..=f32::INFINITY)) {
-        // we want to map the normal to a color
-        let normal_color = 0.5 * (t.normal + Point3::new(1., 1., 1.));
-        return Color::new(normal_color.x(), normal_color.y(), normal_color.z());
+const MAX_DEPTH: usize = 10;
+
+fn ray_color(ray: &Ray, world: &HittableList, depth: usize) -> Color {
+    if depth > MAX_DEPTH {
+        return Color::default();
+    }
+
+    if let Some(t) = world.hit(ray, &(0.001..=f32::INFINITY)) {
+        let direction = Vector3::random_in_hemisphere(&t.normal);
+        // bounce the ray by creating a new one from the hit point in the direction
+        let new_ray = Ray::new(t.p, direction);
+        // on each bounce, reduce the color by half
+        let color = ray_color(&new_ray, world, depth + 1);
+        let half_color = color.inner() * 0.5;
+        // we know the color is in the range [0, 1]
+        return Color::new(half_color.x(), half_color.y(), half_color.z());
     }
 
     let unit_direction = ray.direction().unit_vector();

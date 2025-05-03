@@ -200,6 +200,35 @@ impl VectorD<3> {
         Self { e: [x, y, z] }
     }
 
+    pub fn random_in_range(min: f32, max: f32) -> Self {
+        Self {
+            e: [
+                rand::random_range(min..=max),
+                rand::random_range(min..=max),
+                rand::random_range(min..=max),
+            ],
+        }
+    }
+
+    pub fn random_unit() -> Self {
+        loop {
+            let p = Self::random_in_range(-1., 1.);
+            let length_squared = p.length_squared();
+            if length_squared <= 1. && length_squared > 1e-50 {
+                return p.unit_vector();
+            }
+        }
+    }
+    
+    pub fn random_in_hemisphere(normal: &Self) -> Self {
+        let in_unit_sphere = Self::random_unit();
+        if in_unit_sphere.dot(normal) > 0. {
+            in_unit_sphere
+        } else {
+            -in_unit_sphere
+        }
+    }
+
     pub const fn x(&self) -> f32 {
         self.e[0]
     }

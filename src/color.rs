@@ -1,5 +1,3 @@
-use std::ops::{Add, AddAssign, Mul};
-
 use crate::math::Point3;
 
 /// Color is a specific point3
